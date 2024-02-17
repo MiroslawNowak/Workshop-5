@@ -4,7 +4,7 @@ const apihost = 'https://todo-api.coderslab.pl';
 function apiListTasks() {
     return fetch(apihost + '/api/tasks',
         {
-            headers : { Authorization: apikey}
+            headers : { Authorization: apikey }
             }
             ).then(
                 function (resp) {
@@ -109,4 +109,108 @@ function renderTask(taskId, title, description, status) {
     addOprButton.innerText = 'add';
     divInOprDivFormDiv.appendChild(addOprButton);
 
+    apiListOperationsForTask(taskId).then(function (response) {
+            response.data.forEach(function (operation) {
+                    renderOperation(listGroupUl, status, operation.id, operation.description, operation.timeSpent);
+            });
+    });
 }
+
+function apiListOperationsForTask (taskId) {
+    return fetch(apihost + "/api/tasks/" + taskId + "/operations",
+        {
+            headers : { Authorization: apikey }
+        }
+    ).then(
+        function (resp) {
+            if(!resp.ok) {
+                alert('Error, open devTools and network page in browser and find the cause');
+            }
+            return resp.json();
+        }
+    );
+}
+
+function renderOperation (operationList, status, operationId, operationDescription, timeSpent) {
+    const li = document.createElement('li');
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
+
+    //operationsList to lista <ul> z <section>
+    operationList.appendChild(li);
+
+    // lewy <div> z <li>
+    const descriptionDiv = document.createElement("div");
+    descriptionDiv.innerText = operationDescription;
+    li.appendChild(descriptionDiv);
+
+    //<span> z lewego diva z <li>
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'badge badge-success badge-pill ml-2';
+    timeSpan.innerText = formatTime(timeSpent);
+
+    descriptionDiv.appendChild(timeSpan);
+
+    if (status === "open") {
+
+        const controlDiv = document.createElement('div');
+        controlDiv.className = 'js-task-open-only';
+        li.appendChild(controlDiv);
+
+        // obsługa kliknięcia przycisku "+15m"
+        const add15minButton = document.createElement('button');
+        add15minButton.className = 'btn btn-outline-success btn-sm mr-2';
+        add15minButton.innerText = '+15m';
+        controlDiv.appendChild(add15minButton);
+
+        // obsługa kliknięcia przycisku "+1h"
+        const add1hButton = document.createElement('button');
+        add1hButton.className = 'btn btn-outline-success btn-sm mr-2';
+        add1hButton.innerText = '+1h';
+        controlDiv.appendChild(add1hButton);
+
+        // obsługa kliknięcia przycisku "Delete"
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-outline-danger btn-sm';
+        deleteButton.innerText = 'Delete';
+        controlDiv.appendChild(deleteButton);
+    }
+
+    function formatTime(timeSpent) {
+
+        const hours = Math.floor(timeSpent / 60);
+        const minutes = timeSpent % 60;
+        if (hours > 0) {
+            return hours + 'h ' + minutes + 'm';
+        } else {
+            return minutes + 'm';
+        }
+    }
+}
+
+function apiCreateTask (title, description) {
+    return fetch( apihost + '/api/tasks',
+        {
+            headers: { Authorization: apikey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({title: title, description: description, status: 'open'}),
+            method: 'POST'
+        }
+        ).then(
+            function (resp) {
+                if (!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            }
+    )
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.js-task-adding-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        console.log(event.target.elements.title.value)
+        apiCreateTask(event.target.elements.title.value, event.target.elements.description.value).then(
+            function(response) { renderTask(response.data.id, response.data.title, response.data.description, response.data.status); }
+        )
+    })
+});
+
+
