@@ -213,4 +213,19 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 });
 
+function apiDeleteTask(taskId) {
+    return fetch( apihost + '/api/tasks/' + taskId,
+        {
+            headers: { Authorization: apikey},
+            method: 'DELETE'
+        }
+    ).then(
+        function (resp) {
+            if (!resp.ok) {
+                alert('Error, open devTools and network page in browser and find the cause')
+            }
+            return resp.json();
+        }
+    )
+}
 
