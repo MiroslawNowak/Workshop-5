@@ -70,6 +70,13 @@ function renderTask(taskId, title, description, status) {
     deleteButton.className = 'btn btn-outline-danger btn-sm ml-2';
     deleteButton.innerText = 'delete';
     headerRightDiv.appendChild(deleteButton);
+    deleteButton.addEventListener('click', function () {
+        apiDeleteTask(taskId).then(
+            function () {
+                section.parentElement.removeChild(section);
+            }
+        )
+    })
 
     //pusta lista ul
     const listGroupUl = document.createElement('ul');
@@ -228,4 +235,6 @@ function apiDeleteTask(taskId) {
         }
     )
 }
+
+
 
