@@ -70,6 +70,7 @@ function renderTask(taskId, title, description, status) {
     deleteButton.className = 'btn btn-outline-danger btn-sm ml-2';
     deleteButton.innerText = 'delete';
     headerRightDiv.appendChild(deleteButton);
+
     deleteButton.addEventListener('click', function () {
         apiDeleteTask(taskId).then(
             function () {
@@ -82,6 +83,12 @@ function renderTask(taskId, title, description, status) {
     const listGroupUl = document.createElement('ul');
     listGroupUl.className = 'list-group list-group-flush';
     section.appendChild(listGroupUl);
+
+    apiListOperationsForTask(taskId).then(function (response) {
+        response.data.forEach(function (operation) {
+            renderOperation(listGroupUl, status, operation.id, operation.description, operation.timeSpent);
+        });
+    });
 
     //Dodanie operacji do zadania (ostatni div w section)
     const addOperationDiv = document.createElement('div');
@@ -116,10 +123,12 @@ function renderTask(taskId, title, description, status) {
     addOprButton.innerText = 'add';
     divInOprDivFormDiv.appendChild(addOprButton);
 
-    apiListOperationsForTask(taskId).then(function (response) {
-            response.data.forEach(function (operation) {
-                    renderOperation(listGroupUl, status, operation.id, operation.description, operation.timeSpent);
+    formInOperationDiv.addEventListener('submit', function (event) {
+        event.preventDefault();
+        apiCreateOperationForTask(taskId, inputInOperationDivFormDiv.value).then(function (response) {
+            renderOperation(listGroupUl, status, response.data.id, response.data.description, response.data.timeSpent);
             });
+        inputInOperationDivFormDiv.value = '';
     });
 }
 
@@ -233,6 +242,23 @@ function apiDeleteTask(taskId) {
             }
             return resp.json();
         }
+    )
+}
+
+function apiCreateOperationForTask(taskId, description) {
+    return fetch( apihost + '/api/tasks/' + taskId + '/operations',
+        {
+            headers: { Authorization: apikey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({description: description, timeSpent: 0}),
+            method: 'POST'
+        }
+        ).then(
+            function (resp) {
+                if (!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            }
     )
 }
 
