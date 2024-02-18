@@ -63,6 +63,15 @@ function renderTask(taskId, title, description, status) {
         finishButton.className = 'btn btn-dark btn-sm js-task-open-only';
         finishButton.innerText = 'finish';
         headerRightDiv.appendChild(finishButton);
+
+        finishButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            apiUpdateTask(taskId, title, description, status).then(
+                function (response) {
+                    console.log(response)
+                }
+            )
+        })
     }
 
     //przycisk usuń
@@ -315,6 +324,22 @@ function apiDeleteOperation(operationId) {
         ).then(
             function (resp) {
                 if(!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            });
+}
+
+function apiUpdateTask(taskId, title, description, status) {
+    return fetch(apihost + "/api/tasks/" + taskId,
+        {
+            headers: { Authorization: apikey},
+            body: JSON.stringify({title: title, description: description, status: 'closed'}),
+            method: 'PUT'
+        }
+        ).then(
+            function (resp) {
+                if (!resp.ok) {
                     alert('Error, open devTools and network page in browser and find the cause')
                 }
                 return resp.json();
