@@ -58,197 +58,187 @@ function renderTask(taskId, title, description, status) {
     headerDiv.appendChild(headerRightDiv);
 
     //przycisk finish
-    if(status === 'open') {
+    if (status === 'open') {
         const finishButton = document.createElement('button');
         finishButton.className = 'btn btn-dark btn-sm js-task-open-only';
         finishButton.innerText = 'finish';
         headerRightDiv.appendChild(finishButton);
 
-        finishButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            apiUpdateTask(taskId, title, description, status).then(
-                function (response) {
-                    console.log(response)
+        //przycisk usuń
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-outline-danger btn-sm ml-2';
+        deleteButton.innerText = 'delete';
+        headerRightDiv.appendChild(deleteButton);
+
+        deleteButton.addEventListener('click', function () {
+            apiDeleteTask(taskId).then(
+                function () {
+                    section.parentElement.removeChild(section);
                 }
             )
         })
-    }
 
-    //przycisk usuń
-    const deleteButton = document.createElement('button');
-    deleteButton.className = 'btn btn-outline-danger btn-sm ml-2';
-    deleteButton.innerText = 'delete';
-    headerRightDiv.appendChild(deleteButton);
+        //pusta lista ul
+        const listGroupUl = document.createElement('ul');
+        listGroupUl.className = 'list-group list-group-flush';
+        section.appendChild(listGroupUl);
 
-    deleteButton.addEventListener('click', function () {
-        apiDeleteTask(taskId).then(
-            function () {
-                section.parentElement.removeChild(section);
-            }
-        )
-    })
-
-    //pusta lista ul
-    const listGroupUl = document.createElement('ul');
-    listGroupUl.className = 'list-group list-group-flush';
-    section.appendChild(listGroupUl);
-
-    apiListOperationsForTask(taskId).then(function (response) {
-        response.data.forEach(function (operation) {
-            renderOperation(listGroupUl, status, operation.id, operation.description, operation.timeSpent);
-        });
-    });
-
-    //Dodanie operacji do zadania (ostatni div w section)
-    const addOperationDiv = document.createElement('div');
-    addOperationDiv.className = 'card-body';
-    section.appendChild(addOperationDiv);
-
-    //formularz w ostatnim divie w sekcji
-    const formInOperationDiv = document.createElement('form');
-    addOperationDiv.appendChild(formInOperationDiv);
-
-    //div w formularzu w divie
-    const divInOperationDivForm = document.createElement('div');
-    divInOperationDivForm.className = 'input-group';
-    formInOperationDiv.appendChild(divInOperationDivForm);
-
-    //input - div - form - div
-    const inputInOperationDivFormDiv = document.createElement('input');
-    inputInOperationDivFormDiv.type = 'text';
-    inputInOperationDivFormDiv.placeholder = 'Operation description';
-    inputInOperationDivFormDiv.className = 'form-control';
-    inputInOperationDivFormDiv.minLength = 5;
-    divInOperationDivForm.appendChild(inputInOperationDivFormDiv);
-
-    //div w div - form - div
-    const divInOprDivFormDiv = document.createElement('div');
-    divInOprDivFormDiv.className = 'input-group-append';
-    divInOperationDivForm.appendChild(divInOprDivFormDiv);
-
-    // przycisk dodawania operacji w div - div - form - div
-    const addOprButton = document.createElement('button');
-    addOprButton.className = 'btn btn-info';
-    addOprButton.innerText = 'add';
-    divInOprDivFormDiv.appendChild(addOprButton);
-
-    formInOperationDiv.addEventListener('submit', function (event) {
-        event.preventDefault();
-        apiCreateOperationForTask(taskId, inputInOperationDivFormDiv.value).then(function (response) {
-            renderOperation(listGroupUl, status, response.data.id, response.data.description, response.data.timeSpent);
+        apiListOperationsForTask(taskId).then(function (response) {
+            response.data.forEach(function (operation) {
+                renderOperation(listGroupUl, status, operation.id, operation.description, operation.timeSpent);
             });
-        inputInOperationDivFormDiv.value = '';
-    });
-}
+        });
 
-function apiListOperationsForTask (taskId) {
-    return fetch(apihost + "/api/tasks/" + taskId + "/operations",
-        {
-            headers : { Authorization: apikey }
-        }
-    ).then(
-        function (resp) {
-            if(!resp.ok) {
-                alert('Error, open devTools and network page in browser and find the cause');
+        //Dodanie operacji do zadania (ostatni div w section)
+        const addOperationDiv = document.createElement('div');
+        addOperationDiv.className = 'card-body';
+        section.appendChild(addOperationDiv);
+
+        //formularz w ostatnim divie w sekcji
+        const formInOperationDiv = document.createElement('form');
+        addOperationDiv.appendChild(formInOperationDiv);
+
+        //div w formularzu w divie
+        const divInOperationDivForm = document.createElement('div');
+        divInOperationDivForm.className = 'input-group';
+        formInOperationDiv.appendChild(divInOperationDivForm);
+
+        //input - div - form - div
+        const inputInOperationDivFormDiv = document.createElement('input');
+        inputInOperationDivFormDiv.type = 'text';
+        inputInOperationDivFormDiv.placeholder = 'Operation description';
+        inputInOperationDivFormDiv.className = 'form-control';
+        inputInOperationDivFormDiv.minLength = 5;
+        divInOperationDivForm.appendChild(inputInOperationDivFormDiv);
+
+        //div w div - form - div
+        const divInOprDivFormDiv = document.createElement('div');
+        divInOprDivFormDiv.className = 'input-group-append';
+        divInOperationDivForm.appendChild(divInOprDivFormDiv);
+
+        // przycisk dodawania operacji w div-div-form-div
+        const addOprButton = document.createElement('button');
+        addOprButton.className = 'btn btn-info';
+        addOprButton.innerText = 'add';
+        divInOprDivFormDiv.appendChild(addOprButton);
+
+        formInOperationDiv.addEventListener('submit', function (event) {
+            event.preventDefault();
+            apiCreateOperationForTask(taskId, inputInOperationDivFormDiv.value).then(function (response) {
+                renderOperation(listGroupUl, status, response.data.id, response.data.description, response.data.timeSpent);
+            });
+            inputInOperationDivFormDiv.value = '';
+        });
+    }
+
+    function apiListOperationsForTask(taskId) {
+        return fetch(apihost + "/api/tasks/" + taskId + "/operations",
+            {
+                headers: {Authorization: apikey}
             }
-            return resp.json();
-        }
-    );
-}
-
-function renderOperation (operationList, status, operationId, operationDescription, timeSpent) {
-    const li = document.createElement('li');
-    li.className = "list-group-item d-flex justify-content-between align-items-center";
-
-    //operationsList to lista <ul> z <section>
-    operationList.appendChild(li);
-
-    // lewy <div> z <li>
-    const descriptionDiv = document.createElement("div");
-    descriptionDiv.innerText = operationDescription;
-    li.appendChild(descriptionDiv);
-
-    //<span> z lewego diva z <li>
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'badge badge-success badge-pill ml-2';
-    timeSpan.innerText = formatTime(timeSpent);
-
-    descriptionDiv.appendChild(timeSpan);
-
-    if (status === "open") {
-
-        const controlDiv = document.createElement('div');
-        controlDiv.className = 'js-task-open-only';
-        li.appendChild(controlDiv);
-
-        // przycisk "+15m"
-        const add15minButton = document.createElement('button');
-        add15minButton.className = 'btn btn-outline-success btn-sm mr-2';
-        add15minButton.innerText = '+15m';
-        controlDiv.appendChild(add15minButton);
-
-        // obsługa przycisku "+15m"
-        add15minButton.addEventListener('click', function (event){
-            event.preventDefault();
-            apiUpdateOperation(operationId, operationDescription, timeSpent + 15).then(
-                function (response) {
-                    timeSpent = response.data.timeSpent;
-                    timeSpan.innerText = formatTime(timeSpent);
-                });
-        });
-
-        // przycisk "+1h"
-        const add1hButton = document.createElement('button');
-        add1hButton.className = 'btn btn-outline-success btn-sm mr-2';
-        add1hButton.innerText = '+1h';
-        controlDiv.appendChild(add1hButton);
-
-        // obsługa przycisku "+1h"
-        add1hButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            apiUpdateOperation(operationId, operationDescription, timeSpent + 60).then(
-                function (response) {
-                    timeSpent = response.data.timeSpent;
-                    timeSpan.innerText = formatTime(timeSpent);
-                });
-        });
-
-
-        // przycisk "Delete" - operation
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-outline-danger btn-sm';
-        deleteButton.innerText = 'Delete';
-        controlDiv.appendChild(deleteButton);
-
-        // obsługa przycisku "Delete" - operation
-        deleteButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            apiDeleteOperation(operationId).then(
-                function () {
-                    li.parentElement.removeChild(li)
-                });
-        });
+        ).then(
+            function (resp) {
+                if (!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause');
+                }
+                return resp.json();
+            }
+        );
     }
 
-    function formatTime(timeSpent) {
+    function renderOperation(operationList, status, operationId, operationDescription, timeSpent) {
+        const li = document.createElement('li');
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
 
-        const hours = Math.floor(timeSpent / 60);
-        const minutes = timeSpent % 60;
-        if (hours > 0) {
-            return hours + 'h ' + minutes + 'm';
-        } else {
-            return minutes + 'm';
+        //operationsList to lista <ul> z <section>
+        operationList.appendChild(li);
+
+        // lewy <div> z <li>
+        const descriptionDiv = document.createElement("div");
+        descriptionDiv.innerText = operationDescription;
+        li.appendChild(descriptionDiv);
+
+        //<span> z lewego diva z <li>
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'badge badge-success badge-pill ml-2';
+        timeSpan.innerText = formatTime(timeSpent);
+
+        descriptionDiv.appendChild(timeSpan);
+
+        if (status === "open") {
+
+            const controlDiv = document.createElement('div');
+            controlDiv.className = 'js-task-open-only';
+            li.appendChild(controlDiv);
+
+            // przycisk "+15 m"
+            const add15minButton = document.createElement('button');
+            add15minButton.className = 'btn btn-outline-success btn-sm mr-2';
+            add15minButton.innerText = '+15m';
+            controlDiv.appendChild(add15minButton);
+
+            // obsługa przycisku "+15 m"
+            add15minButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                apiUpdateOperation(operationId, operationDescription, timeSpent + 15).then(
+                    function (response) {
+                        timeSpent = response.data.timeSpent;
+                        timeSpan.innerText = formatTime(timeSpent);
+                    });
+            });
+
+            // przycisk "+1h"
+            const add1hButton = document.createElement('button');
+            add1hButton.className = 'btn btn-outline-success btn-sm mr-2';
+            add1hButton.innerText = '+1h';
+            controlDiv.appendChild(add1hButton);
+
+            // obsługa przycisku "+1h"
+            add1hButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                apiUpdateOperation(operationId, operationDescription, timeSpent + 60).then(
+                    function (response) {
+                        timeSpent = response.data.timeSpent;
+                        timeSpan.innerText = formatTime(timeSpent);
+                    });
+            });
+
+
+            // przycisk "Delete" - operation
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn btn-outline-danger btn-sm';
+            deleteButton.innerText = 'Delete';
+            controlDiv.appendChild(deleteButton);
+
+            // obsługa przycisku "Delete" - operation
+            deleteButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                apiDeleteOperation(operationId).then(
+                    function () {
+                        li.parentElement.removeChild(li)
+                    });
+            });
+        }
+
+        function formatTime(timeSpent) {
+
+            const hours = Math.floor(timeSpent / 60);
+            const minutes = timeSpent % 60;
+            if (hours > 0) {
+                return hours + 'h ' + minutes + 'm';
+            } else {
+                return minutes + 'm';
+            }
         }
     }
-}
 
-function apiCreateTask (title, description) {
-    return fetch( apihost + '/api/tasks',
-        {
-            headers: { Authorization: apikey, 'Content-Type': 'application/json' },
-            body: JSON.stringify({title: title, description: description, status: 'open'}),
-            method: 'POST'
-        }
+    function apiCreateTask(title, description) {
+        return fetch(apihost + '/api/tasks',
+            {
+                headers: {Authorization: apikey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({title: title, description: description, status: 'open'}),
+                method: 'POST'
+            }
         ).then(
             function (resp) {
                 if (!resp.ok) {
@@ -256,40 +246,26 @@ function apiCreateTask (title, description) {
                 }
                 return resp.json();
             });
-}
+    }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelector('.js-task-adding-form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        console.log(event.target.elements.title.value)
-        apiCreateTask(event.target.elements.title.value, event.target.elements.description.value).then(
-            function(response) { renderTask(response.data.id, response.data.title, response.data.description, response.data.status); }
-        )
-    });
-});
-
-function apiDeleteTask(taskId) {
-    return fetch( apihost + '/api/tasks/' + taskId,
-        {
-            headers: { Authorization: apikey},
-            method: 'DELETE'
-        }
-    ).then(
-        function (resp) {
-            if (!resp.ok) {
-                alert('Error, open devTools and network page in browser and find the cause')
-            }
-            return resp.json();
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelector('.js-task-adding-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            console.log(event.target.elements.title.value)
+            apiCreateTask(event.target.elements.title.value, event.target.elements.description.value).then(
+                function (response) {
+                    renderTask(response.data.id, response.data.title, response.data.description, response.data.status);
+                }
+            )
         });
-}
+    });
 
-function apiCreateOperationForTask(taskId, description) {
-    return fetch( apihost + '/api/tasks/' + taskId + '/operations',
-        {
-            headers: { Authorization: apikey, 'Content-Type': 'application/json' },
-            body: JSON.stringify({description: description, timeSpent: 0}),
-            method: 'POST'
-        }
+    function apiDeleteTask(taskId) {
+        return fetch(apihost + '/api/tasks/' + taskId,
+            {
+                headers: {Authorization: apikey},
+                method: 'DELETE'
+            }
         ).then(
             function (resp) {
                 if (!resp.ok) {
@@ -297,46 +273,46 @@ function apiCreateOperationForTask(taskId, description) {
                 }
                 return resp.json();
             });
-}
+    }
 
-function apiUpdateOperation(operationId, description, timeSpent) {
-    return fetch(apihost + '/api/operations/' + operationId,
-        {
-            headers: {Authorization: apikey, 'Content-Type': 'application/json'},
-            body: JSON.stringify({description: description, timeSpent: timeSpent}),
-            method: 'PUT'
-        }
+    function apiCreateOperationForTask(taskId, description) {
+        return fetch(apihost + '/api/tasks/' + taskId + '/operations',
+            {
+                headers: {Authorization: apikey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({description: description, timeSpent: 0}),
+                method: 'POST'
+            }
         ).then(
             function (resp) {
-                if(!resp.ok) {
+                if (!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            });
+    }
+
+    function apiUpdateOperation(operationId, description, timeSpent) {
+        return fetch(apihost + '/api/operations/' + operationId,
+            {
+                headers: {Authorization: apikey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({description: description, timeSpent: timeSpent}),
+                method: 'PUT'
+            }
+        ).then(
+            function (resp) {
+                if (!resp.ok) {
                     alert('Error, open devTools and network page in browser and find the cause');
                 }
                 return resp.json();
             });
-}
+    }
 
-function apiDeleteOperation(operationId) {
-    return fetch(apihost + '/api/operations/' + operationId,
-        {
-            headers: {Authorization: apikey},
-            method: 'DELETE'
-        }
-        ).then(
-            function (resp) {
-                if(!resp.ok) {
-                    alert('Error, open devTools and network page in browser and find the cause')
-                }
-                return resp.json();
-            });
-}
-
-function apiUpdateTask(taskId, title, description, status) {
-    return fetch(apihost + "/api/tasks/" + taskId,
-        {
-            headers: { Authorization: apikey},
-            body: JSON.stringify({title: title, description: description, status: 'closed'}),
-            method: 'PUT'
-        }
+    function apiDeleteOperation(operationId) {
+        return fetch(apihost + '/api/operations/' + operationId,
+            {
+                headers: {Authorization: apikey},
+                method: 'DELETE'
+            }
         ).then(
             function (resp) {
                 if (!resp.ok) {
@@ -344,7 +320,5 @@ function apiUpdateTask(taskId, title, description, status) {
                 }
                 return resp.json();
             });
+    }
 }
-
-
-
