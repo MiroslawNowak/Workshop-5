@@ -205,11 +205,20 @@ function renderOperation (operationList, status, operationId, operationDescripti
         });
 
 
-        // obsługa kliknięcia przycisku "Delete"
+        // przycisk "Delete" - operation
         const deleteButton = document.createElement('button');
         deleteButton.className = 'btn btn-outline-danger btn-sm';
         deleteButton.innerText = 'Delete';
         controlDiv.appendChild(deleteButton);
+
+        // obsługa przycisku "Delete" - operation
+        deleteButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            apiDeleteOperation(operationId).then(
+                function () {
+                    li.parentElement.removeChild(li)
+                });
+        });
     }
 
     function formatTime(timeSpent) {
@@ -237,9 +246,9 @@ function apiCreateTask (title, description) {
                     alert('Error, open devTools and network page in browser and find the cause')
                 }
                 return resp.json();
-            }
-    )
+            });
 }
+
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.js-task-adding-form').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -247,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
         apiCreateTask(event.target.elements.title.value, event.target.elements.description.value).then(
             function(response) { renderTask(response.data.id, response.data.title, response.data.description, response.data.status); }
         )
-    })
+    });
 });
 
 function apiDeleteTask(taskId) {
@@ -262,8 +271,7 @@ function apiDeleteTask(taskId) {
                 alert('Error, open devTools and network page in browser and find the cause')
             }
             return resp.json();
-        }
-    )
+        });
 }
 
 function apiCreateOperationForTask(taskId, description) {
@@ -279,8 +287,7 @@ function apiCreateOperationForTask(taskId, description) {
                     alert('Error, open devTools and network page in browser and find the cause')
                 }
                 return resp.json();
-            }
-    )
+            });
 }
 
 function apiUpdateOperation(operationId, description, timeSpent) {
@@ -296,8 +303,22 @@ function apiUpdateOperation(operationId, description, timeSpent) {
                     alert('Error, open devTools and network page in browser and find the cause');
                 }
                 return resp.json();
-            }
-    )
+            });
+}
+
+function apiDeleteOperation(operationId) {
+    return fetch(apihost + '/api/operations/' + operationId,
+        {
+            headers: {Authorization: apikey},
+            method: 'DELETE'
+        }
+        ).then(
+            function (resp) {
+                if(!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            });
 }
 
 
