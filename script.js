@@ -172,17 +172,38 @@ function renderOperation (operationList, status, operationId, operationDescripti
         controlDiv.className = 'js-task-open-only';
         li.appendChild(controlDiv);
 
-        // obsługa kliknięcia przycisku "+15m"
+        // przycisk "+15m"
         const add15minButton = document.createElement('button');
         add15minButton.className = 'btn btn-outline-success btn-sm mr-2';
         add15minButton.innerText = '+15m';
         controlDiv.appendChild(add15minButton);
 
-        // obsługa kliknięcia przycisku "+1h"
+        // obsługa przycisku "+15m"
+        add15minButton.addEventListener('click', function (event){
+            event.preventDefault();
+            apiUpdateOperation(operationId, operationDescription, timeSpent + 15).then(
+                function (response) {
+                    timeSpent = response.data.timeSpent;
+                    timeSpan.innerText = formatTime(timeSpent);
+                });
+        });
+
+        // przycisk "+1h"
         const add1hButton = document.createElement('button');
         add1hButton.className = 'btn btn-outline-success btn-sm mr-2';
         add1hButton.innerText = '+1h';
         controlDiv.appendChild(add1hButton);
+
+        // obsługa przycisku "+1h"
+        add1hButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            apiUpdateOperation(operationId, operationDescription, timeSpent + 60).then(
+                function (response) {
+                    timeSpent = response.data.timeSpent;
+                    timeSpan.innerText = formatTime(timeSpent);
+                });
+        });
+
 
         // obsługa kliknięcia przycisku "Delete"
         const deleteButton = document.createElement('button');
@@ -256,6 +277,23 @@ function apiCreateOperationForTask(taskId, description) {
             function (resp) {
                 if (!resp.ok) {
                     alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            }
+    )
+}
+
+function apiUpdateOperation(operationId, description, timeSpent) {
+    return fetch(apihost + '/api/operations/' + operationId,
+        {
+            headers: {Authorization: apikey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({description: description, timeSpent: timeSpent}),
+            method: 'PUT'
+        }
+        ).then(
+            function (resp) {
+                if(!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause');
                 }
                 return resp.json();
             }
