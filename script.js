@@ -64,23 +64,20 @@ function renderTask(taskId, title, description, status) {
         finishButton.innerText = 'finish';
         headerRightDiv.appendChild(finishButton);
 
-        //przycisk usuń
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-outline-danger btn-sm ml-2';
-        deleteButton.innerText = 'delete';
-        headerRightDiv.appendChild(deleteButton);
-
-        deleteButton.addEventListener('click', function () {
-            apiDeleteTask(taskId).then(
+        // Obsługa przycisku finish. Po kliknięciu znikają elementy oznaczone klasą .js-task-open-only
+        finishButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            apiUpdateTask(taskId, title, description, status).then(
                 function () {
-                    section.parentElement.removeChild(section);
-                }
-            )
-        })
+                    document.querySelectorAll('.js-task-open-only').forEach(cls => {
+                            cls.style.display = 'none'
+                    });
+                });
+        });
 
         //pusta lista ul
         const listGroupUl = document.createElement('ul');
-        listGroupUl.className = 'list-group list-group-flush';
+        listGroupUl.className = 'list-group list-group-flush js-task-open-only';
         section.appendChild(listGroupUl);
 
         apiListOperationsForTask(taskId).then(function (response) {
@@ -91,7 +88,7 @@ function renderTask(taskId, title, description, status) {
 
         //Dodanie operacji do zadania (ostatni div w section)
         const addOperationDiv = document.createElement('div');
-        addOperationDiv.className = 'card-body';
+        addOperationDiv.className = 'card-body js-task-open-only';
         section.appendChild(addOperationDiv);
 
         //formularz w ostatnim divie w sekcji
@@ -130,6 +127,22 @@ function renderTask(taskId, title, description, status) {
             inputInOperationDivFormDiv.value = '';
         });
     }
+
+    //PRZYCISK USUŃ ZADANIE
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-outline-danger btn-sm ml-2';
+    deleteButton.innerText = 'delete';
+    headerRightDiv.appendChild(deleteButton);
+
+    deleteButton.addEventListener('click', function () {
+        apiDeleteTask(taskId).then(
+            function () {
+                section.parentElement.removeChild(section);
+            }
+        )
+    })
+}
+
 
     function apiListOperationsForTask(taskId) {
         return fetch(apihost + "/api/tasks/" + taskId + "/operations",
@@ -320,5 +333,21 @@ function renderTask(taskId, title, description, status) {
                 }
                 return resp.json();
             });
-    }
+
+}
+
+function apiUpdateTask(taskId, title, description, status) {
+    return fetch(apihost + '/api/tasks/' + taskId,
+        {
+            headers: {Authorization: apikey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({title: title, description: description, status: 'closed'}),
+            method: 'PUT'
+        }
+    ).then(
+        function (resp) {
+            if (!resp.ok) {
+                alert('Error, open devTools and network page in browser and find the cause')
+            }
+            return resp.json();
+        });
 }
