@@ -12,8 +12,7 @@ function apiListTasks() {
                         alert('Error, open devTools and network page in browser and find the cause');
                     }
                     return resp.json();
-                }
-    )
+                });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -22,10 +21,8 @@ apiListTasks().then(
         response.data.forEach(
             function (task) {
                 renderTask(task.id, task.title, task.description, task.status);
-            }
-        )
-    }
-)
+            });
+    });
 });
 
 function renderTask(taskId, title, description, status) {
@@ -67,9 +64,9 @@ function renderTask(taskId, title, description, status) {
         // Obsługa przycisku finish. Po kliknięciu znikają elementy oznaczone klasą .js-task-open-only
         finishButton.addEventListener('click', function (event) {
             event.preventDefault();
-            apiUpdateTask(taskId, title, description, status).then(
+            apiUpdateTask(taskId, title, description, 'closed').then(
                 function () {
-                    document.querySelectorAll('.js-task-open-only').forEach(cls => {
+                    section.querySelectorAll('.js-task-open-only').forEach(cls => {
                             cls.style.display = 'none'
                     });
                 });
@@ -119,6 +116,7 @@ function renderTask(taskId, title, description, status) {
         addOprButton.innerText = 'add';
         divInOprDivFormDiv.appendChild(addOprButton);
 
+        // obsługa przycisku dodawania operacji
         formInOperationDiv.addEventListener('submit', function (event) {
             event.preventDefault();
             apiCreateOperationForTask(taskId, inputInOperationDivFormDiv.value).then(function (response) {
@@ -134,15 +132,14 @@ function renderTask(taskId, title, description, status) {
     deleteButton.innerText = 'delete';
     headerRightDiv.appendChild(deleteButton);
 
+    //obsługa przycisku usuń zadanie
     deleteButton.addEventListener('click', function () {
         apiDeleteTask(taskId).then(
             function () {
                 section.parentElement.removeChild(section);
-            }
-        )
-    })
+            });
+    });
 }
-
 
     function apiListOperationsForTask(taskId) {
         return fetch(apihost + "/api/tasks/" + taskId + "/operations",
@@ -155,16 +152,14 @@ function renderTask(taskId, title, description, status) {
                     alert('Error, open devTools and network page in browser and find the cause');
                 }
                 return resp.json();
-            }
-        );
+            });
     }
 
     function renderOperation(operationList, status, operationId, operationDescription, timeSpent) {
         const li = document.createElement('li');
         li.className = "list-group-item d-flex justify-content-between align-items-center";
-
-        //operationsList to lista <ul> z <section>
         operationList.appendChild(li);
+        //operationsList to lista <ul> z <section>
 
         // lewy <div> z <li>
         const descriptionDiv = document.createElement("div");
@@ -175,10 +170,9 @@ function renderTask(taskId, title, description, status) {
         const timeSpan = document.createElement('span');
         timeSpan.className = 'badge badge-success badge-pill ml-2';
         timeSpan.innerText = formatTime(timeSpent);
-
         descriptionDiv.appendChild(timeSpan);
 
-        if (status === "open") {
+        if (status === "open") {  // Dla zadań ze statusem otwarte wczytaj ...
 
             const controlDiv = document.createElement('div');
             controlDiv.className = 'js-task-open-only';
@@ -216,7 +210,6 @@ function renderTask(taskId, title, description, status) {
                     });
             });
 
-
             // przycisk "Delete" - operation
             const deleteButton = document.createElement('button');
             deleteButton.className = 'btn btn-outline-danger btn-sm';
@@ -232,16 +225,15 @@ function renderTask(taskId, title, description, status) {
                     });
             });
         }
+    }
 
-        function formatTime(timeSpent) {
-
-            const hours = Math.floor(timeSpent / 60);
-            const minutes = timeSpent % 60;
-            if (hours > 0) {
-                return hours + 'h ' + minutes + 'm';
-            } else {
-                return minutes + 'm';
-            }
+    function formatTime(timeSpent) {
+        const hours = Math.floor(timeSpent / 60);
+        const minutes = timeSpent % 60;
+        if (hours > 0) {
+            return hours + 'h ' + minutes + 'm';
+        } else {
+            return minutes + 'm';
         }
     }
 
@@ -336,18 +328,18 @@ function renderTask(taskId, title, description, status) {
 
 }
 
-function apiUpdateTask(taskId, title, description, status) {
-    return fetch(apihost + '/api/tasks/' + taskId,
-        {
-            headers: {Authorization: apikey, 'Content-Type': 'application/json'},
-            body: JSON.stringify({title: title, description: description, status: 'closed'}),
-            method: 'PUT'
-        }
-    ).then(
-        function (resp) {
-            if (!resp.ok) {
-                alert('Error, open devTools and network page in browser and find the cause')
+    function apiUpdateTask(taskId, title, description, status) {
+        return fetch(apihost + '/api/tasks/' + taskId,
+            {
+                headers: {Authorization: apikey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({title: title, description: description, status: status}),
+                method: 'PUT'
             }
-            return resp.json();
-        });
-}
+        ).then(
+            function (resp) {
+                if (!resp.ok) {
+                    alert('Error, open devTools and network page in browser and find the cause')
+                }
+                return resp.json();
+            });
+    }
